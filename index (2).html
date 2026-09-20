@@ -1,0 +1,987 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>Nadine's Wordle 🎂</title>
+<meta property="og:title" content="Nadine's Wordle 🎂">
+<meta property="og:description" content="A Wordle made with love for Nadine's 69th birthday — every word chosen just for her.">
+<meta property="og:url" content="https://nadineswordle.com">
+<meta property="og:type" content="website">
+<meta name="theme-color" content="#1794b4">
+<meta name="apple-mobile-web-app-title" content="Nadine's Wordle">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Nadine's Wordle 🎂">
+<meta name="twitter:description" content="A Wordle made with love for Nadine's 69th birthday — every word chosen just for her.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Clear+Sans:wght@400;700&family=Bitter:wght@800&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --color-correct: #1794b4;        /* hero colour — tiles, keys, buttons */
+  --color-correct-dark: #0f7a97;   /* banner gradient end */
+  --color-present: #c9b458;
+  --color-absent: #787c7e;
+  --color-bg: #ffffff;
+  --color-tile-border: #d3d6da;
+  --color-tile-border-filled: #878a8c;
+  --color-text: #1a1a1b;
+  --color-header-border: #d3d6da;
+  --color-key-bg: #d3d6da;
+  --color-key-text: #1a1a1b;
+  --gap: 5px;
+  --board-gap: 8px; /* gap between day-counter bottom and board top */
+  --kb-gap: 8px;    /* gap between board bottom and keyboard top */
+}
+
+html, body {
+  height: 100%;
+}
+
+body {
+  font-family: 'Clear Sans', 'Helvetica Neue', Arial, sans-serif;
+  background: var(--color-bg);
+  color: var(--color-text);
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  overflow: hidden;
+  touch-action: manipulation;
+}
+
+/* HEADER */
+header {
+  width: 100%;
+  max-width: 500px;
+  border-bottom: 1px solid var(--color-header-border);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 6px 16px 4px;
+  flex-shrink: 0;
+}
+@media (min-height: 700px) {
+  header { padding: 10px 16px 6px; }
+  header h1 { font-size: 2.2rem; }
+}
+@media (min-height: 800px) {
+  header { padding: 14px 16px 8px; }
+  .birthday-banner { padding: 7px 16px; font-size: 14px; }
+  header h1 { font-size: 2.4rem; }
+}
+@media (min-height: 900px) {
+  header { padding: 18px 16px 10px; }
+  .birthday-banner { padding: 9px 16px; font-size: 15px; }
+  header h1 { font-size: 2.6rem; }
+}
+.birthday-badge {
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  color: var(--color-correct);
+  font-weight: 700;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+header h1 {
+  font-family: 'Bitter', Georgia, serif;
+  font-size: 2rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: var(--color-text);
+  line-height: 1;
+}
+
+/* BIRTHDAY BANNER */
+.birthday-banner {
+  width: 100%;
+  max-width: 500px;
+  background: linear-gradient(135deg, var(--color-correct) 0%, var(--color-correct-dark) 100%);
+  color: white;
+  text-align: center;
+  padding: 4px 16px;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  flex-shrink: 0;
+}
+
+/* GAME WRAPPER — single container, fills all remaining space after header+banner */
+#game-wrapper {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  max-width: 500px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0 10px;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+/* DAY COUNTER */
+.day-counter {
+  font-size: 11px;
+  color: #999;
+  letter-spacing: 0.05em;
+  width: 100%;
+  text-align: center;
+  flex-shrink: 0;
+  padding: 8px 0 6px;
+}
+
+.day-counter {
+  font-size: 11px;
+  color: #999;
+  letter-spacing: 0.05em;
+  width: 100%;
+  max-width: 500px;
+  text-align: center;
+  padding: 6px 0 4px;
+  flex-shrink: 0;
+  background: var(--color-bg);
+}
+
+/* BOARD AREA — just centers the board */
+#board-area {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-bottom: 12px;
+  box-sizing: border-box;
+}
+
+/* BOARD — sized by JS, centered */
+#board {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap);
+  flex-shrink: 0;
+}
+
+.row {
+  display: flex;
+  flex-direction: row;
+  gap: var(--gap);
+}
+
+.tile {
+  border: 2px solid var(--color-tile-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--color-text);
+  transition: border-color 0.1s;
+  user-select: none;
+}
+.tile[data-letter] { border-color: var(--color-tile-border-filled); }
+.tile.pop { animation: pop 0.1s ease; }
+@keyframes pop {
+  0%   { transform: scale(1); }
+  50%  { transform: scale(1.12); }
+  100% { transform: scale(1); }
+}
+.tile.shake { animation: shake 0.5s ease; }
+@keyframes shake {
+  0%,100% { transform: translateX(0); }
+  20%     { transform: translateX(-6px); }
+  40%     { transform: translateX(6px); }
+  60%     { transform: translateX(-4px); }
+  80%     { transform: translateX(4px); }
+}
+.tile.flip { animation: flip 0.5s ease forwards; }
+@keyframes flip {
+  0%   { transform: rotateX(0); }
+  50%  { transform: rotateX(-90deg); background: transparent; border-color: transparent; }
+  100% { transform: rotateX(0); }
+}
+.tile[data-state="correct"] { background: var(--color-correct); border-color: var(--color-correct); color: white; }
+
+.tile[data-state="present"] { background: var(--color-present); border-color: var(--color-present); color: white; }
+.tile[data-state="absent"]  { background: var(--color-absent);  border-color: var(--color-absent);  color: white; }
+
+/* KEYBOARD */
+#keyboard {
+  width: 100%;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 0 0 max(env(safe-area-inset-bottom), 10px);
+}
+
+/* Standalone home-screen app only — extra padding for comfortable tapping */
+@media all and (display-mode: standalone) {
+  #keyboard {
+    padding: 0 0 calc(env(safe-area-inset-bottom) + 10px);
+  }
+}
+.key-row {
+  display: flex;
+  justify-content: center;
+  gap: 5px;
+}
+.key {
+  height: 46px;
+  min-width: 0;
+  padding: 0;
+  border: none;
+  border-radius: 4px;
+  background: var(--color-key-bg);
+  color: var(--color-key-text);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  text-transform: uppercase;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  transition: background 0.1s;
+}
+.key.wide {
+  max-width: 80px;
+  font-size: 12px;
+  flex: 2;
+}
+.key.wide[data-key="⌫"] {
+  font-size: 0;
+}
+.key.wide[data-key="⌫"] svg {
+  width: 20px;
+  height: 20px;
+  stroke: var(--color-key-text);
+}
+.key[data-state="absent"] .key.wide[data-key="⌫"] svg,
+.key[data-state="correct"] .key.wide[data-key="⌫"] svg,
+.key[data-state="present"] .key.wide[data-key="⌫"] svg { stroke: white; }
+.key[data-state="correct"] { background: var(--color-correct); color: white; }
+.key[data-state="present"] { background: var(--color-present); color: white; }
+.key[data-state="absent"]  { background: var(--color-absent);  color: white; }
+.key:active { filter: brightness(0.9); }
+
+/* Short viewports */
+@media (max-height: 600px) {
+  #keyboard { gap: 4px; }
+  .key-row { gap: 4px; }
+}
+
+/* TOAST */
+#toast-container {
+  position: fixed;
+  top: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  pointer-events: none;
+}
+.toast {
+  background: #1a1a1b;
+  color: white;
+  padding: 10px 18px;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 700;
+  animation: fadeToast 1.8s ease forwards;
+}
+@keyframes fadeToast {
+  0%   { opacity: 0; transform: translateY(-10px); }
+  15%  { opacity: 1; transform: translateY(0); }
+  70%  { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+/* MODAL */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(255,255,255,0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 500;
+  padding: 16px;
+}
+.modal {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 40px rgba(0,0,0,0.15);
+  padding: 32px 24px;
+  max-width: 380px;
+  width: 100%;
+  text-align: center;
+}
+.modal h2 {
+  font-family: 'Archivo Black', 'Arial Black', sans-serif;
+  font-size: 1.5rem;
+  margin-top: 8px;
+  margin-bottom: 8px;
+  color: var(--color-text);
+}
+.modal .answer-reveal {
+  font-size: 1.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: var(--color-correct);
+  margin: 12px 0;
+}
+.modal p {
+  color: #555;
+  font-size: 14px;
+  line-height: 1.5;
+  margin-bottom: 16px;
+}
+.modal .word-meaning {
+  background: #f6f7f8;
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 13px;
+  color: #444;
+  margin-bottom: 20px;
+  line-height: 1.5;
+  text-align: left;
+}
+.btn {
+  background: var(--color-correct);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 14px 28px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  letter-spacing: 0.05em;
+  width: 100%;
+  font-family: inherit;
+}
+.btn:hover { filter: brightness(0.95); }
+
+.intro-emoji { font-size: 3rem; margin-bottom: 12px; }
+.word-count-info {
+  font-size: 12px;
+  color: #999;
+  margin-top: 6px;
+}
+.photo-placeholder {
+  width: 106px;
+  height: 106px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.5rem;
+  margin: 0 auto 16px;
+  overflow: hidden;
+}
+.photo-placeholder img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+</style>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj4KICA8cmVjdCB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgZmlsbD0iI2ZmZmZmZiIvPgogIDxnIHRyYW5zZm9ybT0idHJhbnNsYXRlKDUwLDUwKSBzY2FsZSgwLjc4KSB0cmFuc2xhdGUoLTUwLC01MCkiPgogICAgPHBhdGggZD0iTTQ3IDUwIGg2IiBzdHJva2U9IiMxYTFhMWIiIHN0cm9rZS13aWR0aD0iNC41IiBzdHJva2UtbGluZWNhcD0icm91bmQiIGZpbGw9Im5vbmUiLz4KICAgIDxwYXRoIGQ9Ik0xMSAzMyBDMjYgMzUgNDAgNDAgNDcgNTAgQzUwIDYyIDM4IDY5IDI2IDY5IEMxNCA2OSA4IDUyIDExIDMzIFoiCiAgICAgICAgICBmaWxsPSIjMTc5NGI0IiBzdHJva2U9IiMxYTFhMWIiIHN0cm9rZS13aWR0aD0iMy41IiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+CiAgICA8cGF0aCBkPSJNODkgMzMgQzc0IDM1IDYwIDQwIDUzIDUwIEM1MCA2MiA2MiA2OSA3NCA2OSBDODYgNjkgOTIgNTIgODkgMzMgWiIKICAgICAgICAgIGZpbGw9IiMxNzk0YjQiIHN0cm9rZT0iIzFhMWExYiIgc3Ryb2tlLXdpZHRoPSIzLjUiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz4KICAgIDxwYXRoIGQ9Ik0yMCA1NyBMMjkgNDYiIHN0cm9rZT0iI2ZmZmZmZiIgc3Ryb2tlLXdpZHRoPSI0IiBzdHJva2UtbGluZWNhcD0icm91bmQiIG9wYWNpdHk9IjAuNSIgZmlsbD0ibm9uZSIvPgogICAgPHBhdGggZD0iTTYzIDU3IEw3MiA0NiIgc3Ryb2tlPSIjZmZmZmZmIiBzdHJva2Utd2lkdGg9IjQiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgb3BhY2l0eT0iMC41IiBmaWxsPSJub25lIi8+CiAgPC9nPgo8L3N2Zz4=">
+<link rel="apple-touch-icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj4KICA8cmVjdCB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgZmlsbD0iI2ZmZmZmZiIvPgogIDxnIHRyYW5zZm9ybT0idHJhbnNsYXRlKDUwLDUwKSBzY2FsZSgwLjc4KSB0cmFuc2xhdGUoLTUwLC01MCkiPgogICAgPHBhdGggZD0iTTQ3IDUwIGg2IiBzdHJva2U9IiMxYTFhMWIiIHN0cm9rZS13aWR0aD0iNC41IiBzdHJva2UtbGluZWNhcD0icm91bmQiIGZpbGw9Im5vbmUiLz4KICAgIDxwYXRoIGQ9Ik0xMSAzMyBDMjYgMzUgNDAgNDAgNDcgNTAgQzUwIDYyIDM4IDY5IDI2IDY5IEMxNCA2OSA4IDUyIDExIDMzIFoiCiAgICAgICAgICBmaWxsPSIjMTc5NGI0IiBzdHJva2U9IiMxYTFhMWIiIHN0cm9rZS13aWR0aD0iMy41IiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+CiAgICA8cGF0aCBkPSJNODkgMzMgQzc0IDM1IDYwIDQwIDUzIDUwIEM1MCA2MiA2MiA2OSA3NCA2OSBDODYgNjkgOTIgNTIgODkgMzMgWiIKICAgICAgICAgIGZpbGw9IiMxNzk0YjQiIHN0cm9rZT0iIzFhMWExYiIgc3Ryb2tlLXdpZHRoPSIzLjUiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz4KICAgIDxwYXRoIGQ9Ik0yMCA1NyBMMjkgNDYiIHN0cm9rZT0iI2ZmZmZmZiIgc3Ryb2tlLXdpZHRoPSI0IiBzdHJva2UtbGluZWNhcD0icm91bmQiIG9wYWNpdHk9IjAuNSIgZmlsbD0ibm9uZSIvPgogICAgPHBhdGggZD0iTTYzIDU3IEw3MiA0NiIgc3Ryb2tlPSIjZmZmZmZmIiBzdHJva2Utd2lkdGg9IjQiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgb3BhY2l0eT0iMC41IiBmaWxsPSJub25lIi8+CiAgPC9nPgo8L3N2Zz4=">
+<script>
+  // Register inline web app manifest
+  const manifestData = '{\n  "name": "Nadine\'s Wordle",\n  "short_name": "Nadine\'s Wordle",\n  "description": "Nadine\'s 69th Birthday Edition",\n  "start_url": "/",\n  "display": "standalone",\n  "background_color": "#ffffff",\n  "theme_color": "#1794b4",\n  "orientation": "portrait",\n  "icons": [\n    {\n      "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj4KICA8cmVjdCB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgZmlsbD0iI2ZmZmZmZiIvPgogIDxnIHRyYW5zZm9ybT0idHJhbnNsYXRlKDUwLDUwKSBzY2FsZSgwLjc4KSB0cmFuc2xhdGUoLTUwLC01MCkiPgogICAgPHBhdGggZD0iTTQ3IDUwIGg2IiBzdHJva2U9IiMxYTFhMWIiIHN0cm9rZS13aWR0aD0iNC41IiBzdHJva2UtbGluZWNhcD0icm91bmQiIGZpbGw9Im5vbmUiLz4KICAgIDxwYXRoIGQ9Ik0xMSAzMyBDMjYgMzUgNDAgNDAgNDcgNTAgQzUwIDYyIDM4IDY5IDI2IDY5IEMxNCA2OSA4IDUyIDExIDMzIFoiCiAgICAgICAgICBmaWxsPSIjMTc5NGI0IiBzdHJva2U9IiMxYTFhMWIiIHN0cm9rZS13aWR0aD0iMy41IiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+CiAgICA8cGF0aCBkPSJNODkgMzMgQzc0IDM1IDYwIDQwIDUzIDUwIEM1MCA2MiA2MiA2OSA3NCA2OSBDODYgNjkgOTIgNTIgODkgMzMgWiIKICAgICAgICAgIGZpbGw9IiMxNzk0YjQiIHN0cm9rZT0iIzFhMWExYiIgc3Ryb2tlLXdpZHRoPSIzLjUiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz4KICAgIDxwYXRoIGQ9Ik0yMCA1NyBMMjkgNDYiIHN0cm9rZT0iI2ZmZmZmZiIgc3Ryb2tlLXdpZHRoPSI0IiBzdHJva2UtbGluZWNhcD0icm91bmQiIG9wYWNpdHk9IjAuNSIgZmlsbD0ibm9uZSIvPgogICAgPHBhdGggZD0iTTYzIDU3IEw3MiA0NiIgc3Ryb2tlPSIjZmZmZmZmIiBzdHJva2Utd2lkdGg9IjQiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgb3BhY2l0eT0iMC41IiBmaWxsPSJub25lIi8+CiAgPC9nPgo8L3N2Zz4=",\n      "sizes": "any",\n      "type": "image/svg+xml",\n      "purpose": "any maskable"\n    }\n  ]\n}';
+  const blob = new Blob([manifestData], {type: 'application/json'});
+  const manifestURL = URL.createObjectURL(blob);
+  const link = document.createElement('link');
+  link.rel = 'manifest';
+  link.href = manifestURL;
+  document.head.appendChild(link);
+</script>
+<!-- Open Graph / link preview -->
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://nadineswordle.com/">
+<meta property="og:title" content="Nadine's Wordle 🎂">
+<meta property="og:description" content="A new word every day, hand-picked with love. Happy 69th, Nadine!">
+<meta property="og:image" content="https://nadineswordle.com/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://nadineswordle.com/og-image.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Nadine's Wordle">
+<meta name="theme-color" content="#1794b4">
+</head>
+<body>
+
+<div id="toast-container"></div>
+
+<!-- INTRO MODAL -->
+<div class="modal-overlay" id="intro-modal" style="display:none;">
+  <div class="modal">
+    <div class="photo-placeholder" id="hero-photo"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj4KICA8cmVjdCB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgZmlsbD0iI2ZmZmZmZiIvPgogIDxnIHRyYW5zZm9ybT0idHJhbnNsYXRlKDUwLDUwKSBzY2FsZSgwLjc4KSB0cmFuc2xhdGUoLTUwLC01MCkiPgogICAgPHBhdGggZD0iTTQ3IDUwIGg2IiBzdHJva2U9IiMxYTFhMWIiIHN0cm9rZS13aWR0aD0iNC41IiBzdHJva2UtbGluZWNhcD0icm91bmQiIGZpbGw9Im5vbmUiLz4KICAgIDxwYXRoIGQ9Ik0xMSAzMyBDMjYgMzUgNDAgNDAgNDcgNTAgQzUwIDYyIDM4IDY5IDI2IDY5IEMxNCA2OSA4IDUyIDExIDMzIFoiCiAgICAgICAgICBmaWxsPSIjMTc5NGI0IiBzdHJva2U9IiMxYTFhMWIiIHN0cm9rZS13aWR0aD0iMy41IiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+CiAgICA8cGF0aCBkPSJNODkgMzMgQzc0IDM1IDYwIDQwIDUzIDUwIEM1MCA2MiA2MiA2OSA3NCA2OSBDODYgNjkgOTIgNTIgODkgMzMgWiIKICAgICAgICAgIGZpbGw9IiMxNzk0YjQiIHN0cm9rZT0iIzFhMWExYiIgc3Ryb2tlLXdpZHRoPSIzLjUiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz4KICAgIDxwYXRoIGQ9Ik0yMCA1NyBMMjkgNDYiIHN0cm9rZT0iI2ZmZmZmZiIgc3Ryb2tlLXdpZHRoPSI0IiBzdHJva2UtbGluZWNhcD0icm91bmQiIG9wYWNpdHk9IjAuNSIgZmlsbD0ibm9uZSIvPgogICAgPHBhdGggZD0iTTYzIDU3IEw3MiA0NiIgc3Ryb2tlPSIjZmZmZmZmIiBzdHJva2Utd2lkdGg9IjQiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgb3BhY2l0eT0iMC41IiBmaWxsPSJub25lIi8+CiAgPC9nPgo8L3N2Zz4=" alt="Nadine" style="width:100%;height:100%;object-fit:contain;" /></div>
+    <h2>Happy 69th, Nadine!</h2>
+    <p style="font-size:15px; font-weight:700; color: var(--color-correct); margin-bottom:8px;">We love you!</p>
+    <!-- PLACEHOLDER copy — Jenna's version goes here -->
+    <p>We made you your very own Wordle — every word was chosen just for you. 69 years of Nadine, one word at a time. 🎂</p>
+    <div class="word-count-info">A new word every day • All words hand-picked with love</div>
+    <br>
+    <button class="btn" onclick="closeIntro()">Let's Play!</button>
+  </div>
+</div>
+
+<!-- END MODAL -->
+<div class="modal-overlay" id="end-modal" style="display:none;">
+  <div class="modal">
+    <h2 id="end-title">🎉 You got it!</h2>
+    <div class="answer-reveal" id="end-answer"></div>
+    <div class="word-meaning" id="end-meaning"></div>
+    <button class="btn" onclick="closeEndModal()">Play Again Tomorrow</button>
+  </div>
+</div>
+
+<header>
+  <h1>Wordle</h1>
+</header>
+
+<div class="birthday-banner">
+  🎂 Nadine's 69th Birthday Edition
+</div>
+<div class="day-counter" id="day-counter"></div>
+
+<div id="game-wrapper">
+  <div id="board-area"><div id="board"></div></div>
+  <div id="keyboard"></div>
+</div>
+
+<script>
+// ── STALE-CACHE SELF-CORRECTION ─────────────────────────────────────────────
+// Runs FIRST before anything else. Mobile Safari caches HTML aggressively.
+// We detect a stale load by comparing today's real date against what was stored
+// in localStorage on the last successful load. If they differ, redirect to a
+// fresh URL (with today's date as a query param) which Safari treats as new.
+// This must run before loadState() to prevent a stale game from being restored.
+(function checkForStaleCache() {
+  if (window.location.protocol === 'file:') return;
+  const n = new Date();
+  const stamp = `${n.getFullYear()}${String(n.getMonth()+1).padStart(2,'0')}${String(n.getDate()).padStart(2,'0')}`;
+  const KEY = 'nadines-wordle-day-stamp';
+  let stored;
+  try { stored = localStorage.getItem(KEY); } catch(e) {}
+  // If we have a stored stamp and it doesn't match today, this HTML is stale.
+  // Redirect to /?d=YYYYMMDD — Safari fetches fresh HTML for new URLs.
+  if (stored && stored !== stamp) {
+    try { localStorage.setItem(KEY, stamp); } catch(e) {}
+    window.location.replace('/?d=' + stamp);
+    return;
+  }
+  try { localStorage.setItem(KEY, stamp); } catch(e) {}
+})();
+// ─────────────────────────────────────────────────────────────────────────────
+
+// ════════════════════════════════════════════════════════════════════════════
+//  CONFIG — everything person-specific lives here.
+//  Two things live OUTSIDE this block: the <meta> tags in <head> (they have to
+//  be static so link previews work) and --color-correct in the CSS up top.
+// ════════════════════════════════════════════════════════════════════════════
+const CONFIG = {
+  age:      69,
+  birthday: { year: 2026, month: 9, day: 22 },   // Sept 22 2026 (month is 1–12)
+  countdownCount: 3                             // countdown words at end of WORD_LIST
+};
+
+// WORD_LIST layout:
+//   First (length - countdownCount) entries → the main words, one per day
+//     starting on her birthday, then looping back to the start.
+//   Last `countdownCount` entries → the days immediately BEFORE the birthday.
+//
+//   Every word must be exactly 5 letters, uppercase. The main-word count should
+//   equal CONFIG.age (69) — the console will tell you if it doesn't.
+//
+//   ⚠ PLACEHOLDER — replace this whole array with Jenna's list.
+const WORD_LIST = [
+  // ── MAIN WORDS ──────────────────────────────────────────────────────────
+  { word: "TULIP",  meaning: "Placeholder — the note she sees after solving." },
+  { word: "BEACH",  meaning: "Placeholder — the note she sees after solving." },
+  { word: "MUSIC",  meaning: "Placeholder — the note she sees after solving." },
+  { word: "TABLE",  meaning: "Placeholder — the note she sees after solving." },
+  { word: "LAUGH",  meaning: "Placeholder — the note she sees after solving." },
+  { word: "GRAND",  meaning: "Placeholder — the note she sees after solving." },
+  { word: "HEART",  meaning: "Placeholder — the note she sees after solving." },
+  { word: "TOAST",  meaning: "Placeholder — last word in the list, so make it the big one." },
+
+  // ── COUNTDOWN (the days just before the birthday) ───────────────────────
+  { word: "PARTY",  meaning: "🎉 Three days to go! The party is almost here!" },
+  { word: "READY",  meaning: "✨ Two days! Are you ready? We are!" },
+  { word: "HAPPY",  meaning: "😊 One more sleep — tomorrow's the day! 🎂" },
+];
+
+const COUNTDOWN_COUNT = CONFIG.countdownCount;
+const MAIN_COUNT      = WORD_LIST.length - COUNTDOWN_COUNT;
+const BIRTHDAY        = new Date(CONFIG.birthday.year, CONFIG.birthday.month - 1, CONFIG.birthday.day);
+
+// Sanity checks — console only, never shown to her
+WORD_LIST.forEach((w, i) => {
+  if (!/^[A-Z]{5}$/.test(w.word)) console.warn(`Word ${i + 1} ("${w.word}") is not 5 uppercase letters.`);
+});
+if (MAIN_COUNT !== CONFIG.age) {
+  console.warn(`${MAIN_COUNT} main words, but CONFIG.age is ${CONFIG.age}. Add or remove words so they match.`);
+}
+
+// All valid words for gameplay purposes
+const validWords = WORD_LIST.filter(w => w.word.length === 5);
+
+// Use local midnight to ensure day rolls over correctly in user's timezone
+function getLocalDayIndex() {
+  const now = new Date();
+  const localMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const raw = Math.round((localMidnight - BIRTHDAY) / (1000 * 60 * 60 * 24));
+
+  if (raw >= 0) {
+    // Birthday and after: cycle through the main words
+    return raw % MAIN_COUNT;
+  } else {
+    // Before the birthday: walk the countdown words, earliest first.
+    // Anything earlier than the countdown window shows the first countdown word.
+    const countdownIndex = MAIN_COUNT + Math.max(raw + COUNTDOWN_COUNT, 0);
+    return Math.min(countdownIndex, WORD_LIST.length - 1);
+  }
+}
+
+const dayIndex = getLocalDayIndex();
+const todayEntry = validWords[dayIndex];
+const TARGET  = todayEntry.word;
+const MEANING = todayEntry.meaning;
+
+// Store today's date string so we can detect midnight rollover
+// Build YYYY-MM-DD without relying on locale (en-CA not guaranteed on all devices)
+const _d = new Date();
+const todayDateStr = `${_d.getFullYear()}-${String(_d.getMonth()+1).padStart(2,'0')}-${String(_d.getDate()).padStart(2,'0')}`;
+
+let VALID_GUESSES = new Set(validWords.map(w => w.word));
+
+fetch('https://raw.githubusercontent.com/tabatkins/wordle-list/main/words')
+  .then(r => r.text())
+  .then(text => {
+    text.trim().split('\n').forEach(w => {
+      const word = w.trim().toUpperCase();
+      if (word.length === 5) VALID_GUESSES.add(word);
+    });
+  })
+  .catch(() => console.warn('Extended word list unavailable, using built-in fallback.'));
+
+const MAX_GUESSES = 6;
+const WORD_LENGTH = 5;
+const GAP = 5;
+
+let currentRow     = 0;
+let currentCol     = 0;
+let currentGuess   = [];
+let gameOver       = false;
+let revealInProgress = false;
+
+// PERSISTENCE - saves date alongside state, only restores if date matches today
+const SAVE_KEY = 'nadines-wordle-state-v1';
+
+function saveState() {
+  const rowData = [];
+  for (let r = 0; r < MAX_GUESSES; r++) {
+    const row = [];
+    for (let c = 0; c < WORD_LENGTH; c++) {
+      const tile = tiles[r] && tiles[r][c];
+      if (!tile) { row.push({ letter: '', state: '' }); continue; }
+      row.push({ letter: tile.textContent || '', state: tile.dataset.state || '' });
+    }
+    rowData.push(row);
+  }
+  const keyStates = {};
+  Object.entries(keyEl).forEach(([k, el]) => {
+    if (el.dataset.state) keyStates[k] = el.dataset.state;
+  });
+  try {
+    localStorage.setItem(SAVE_KEY, JSON.stringify({
+      date: todayDateStr,
+      dayIndex,
+      currentRow, gameOver, rowData, keyStates
+    }));
+  } catch(e) {}
+}
+
+function loadState() {
+  let saved;
+  try { saved = JSON.parse(localStorage.getItem(SAVE_KEY)); } catch(e) {}
+  // Reject if no save, wrong date, or wrong dayIndex
+  if (!saved || saved.date !== todayDateStr || saved.dayIndex !== dayIndex) {
+    localStorage.removeItem(SAVE_KEY); // wipe stale data
+    return false;
+  }
+  saved.rowData.forEach((row, r) => {
+    row.forEach(({ letter, state }, c) => {
+      const tile = tiles[r] && tiles[r][c];
+      if (!tile) return;
+      if (letter) { tile.textContent = letter; tile.dataset.letter = letter; }
+      if (state)  { tile.dataset.state = state; }
+    });
+  });
+  Object.entries(saved.keyStates || {}).forEach(([k, state]) => {
+    if (keyEl[k]) keyEl[k].dataset.state = state;
+  });
+  currentRow   = saved.currentRow || 0;
+  currentCol   = 0;
+  currentGuess = [];
+  gameOver     = saved.gameOver || false;
+  return true;
+}
+
+// Build board
+const boardEl = document.getElementById('board');
+const tiles = [];
+for (let r = 0; r < MAX_GUESSES; r++) {
+  const rowEl = document.createElement('div');
+  rowEl.className = 'row';
+  const rowTiles = [];
+  for (let c = 0; c < WORD_LENGTH; c++) {
+    const tile = document.createElement('div');
+    tile.className = 'tile';
+    rowEl.appendChild(tile);
+    rowTiles.push(tile);
+  }
+  boardEl.appendChild(rowEl);
+  tiles.push(rowTiles);
+}
+
+// Build keyboard
+const KEYS = [
+  ['Q','W','E','R','T','Y','U','I','O','P'],
+  [null,'A','S','D','F','G','H','J','K','L',null],
+  ['ENTER','Z','X','C','V','B','N','M','⌫']
+];
+const keyEl = {};
+const kb = document.getElementById('keyboard');
+KEYS.forEach(row => {
+  const rowEl = document.createElement('div');
+  rowEl.className = 'key-row';
+  row.forEach(k => {
+    if (k === null) {
+      const spacer = document.createElement('div');
+      spacer.style.flex = '0.5';
+      rowEl.appendChild(spacer);
+      return;
+    }
+    const btn = document.createElement('button');
+    btn.className = 'key' + (k.length > 1 || k === '⌫' ? ' wide' : '');
+    btn.dataset.key = k;
+    if (k === '⌫') {
+      btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 4H8l-7 8 7 8h13a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z"/><line x1="18" y1="9" x2="12" y2="15"/><line x1="12" y1="9" x2="18" y2="15"/></svg>';
+    } else {
+      btn.textContent = k;
+    }
+    btn.addEventListener('click', () => handleKey(k));
+    rowEl.appendChild(btn);
+    keyEl[k] = btn;
+  });
+  kb.appendChild(rowEl);
+});
+
+// Load saved state after board + keyboard are built
+const hadSavedState = loadState();
+
+// Decide which modal to show:
+// - Never seen intro before → show intro
+// - Seen intro, game over → show end modal
+// - Seen intro, game in progress → show nothing (just play)
+const INTRO_KEY = 'nadines-wordle-intro-seen';
+const hasSeenIntro = localStorage.getItem(INTRO_KEY) === 'true';
+
+if (!hasSeenIntro) {
+  document.getElementById('intro-modal').style.display = 'flex';
+} else if (hadSavedState && gameOver) {
+  const lastRow = currentRow - 1;
+  const won = lastRow >= 0 && tiles[lastRow] &&
+    tiles[lastRow].every(t => t.dataset.state === 'correct');
+  setTimeout(() => showEndModal(won), 300);
+}
+
+// Calculate raw day offset from epoch for display
+const _now = new Date();
+const _midnight = new Date(_now.getFullYear(), _now.getMonth(), _now.getDate());
+const rawOffset = Math.round((_midnight - BIRTHDAY) / (1000 * 60 * 60 * 24));
+const _daysToGo = -rawOffset;
+const wordLabel = rawOffset < 0
+  ? `${_daysToGo} day${_daysToGo === 1 ? '' : 's'} to go`
+  : `Word ${rawOffset % MAIN_COUNT + 1} of ${MAIN_COUNT}`;
+document.getElementById('day-counter').textContent =
+  `${wordLabel} • ${new Date().toLocaleDateString('en-US', {weekday:'long', month:'long', day:'numeric', year:'numeric'})}`;
+
+function resizeBoard() {
+  const wrapper    = document.getElementById('game-wrapper');
+  const kbEl       = document.getElementById('keyboard');
+  const dayCounter = document.getElementById('day-counter');
+  const hdrEl      = document.querySelector('header');
+  const banEl      = document.querySelector('.birthday-banner');
+
+  const vvH    = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+  const fixedH = hdrEl.offsetHeight + banEl.offsetHeight + dayCounter.offsetHeight;
+  const gameH  = vvH - fixedH; // space for board + keyboard
+
+  // Size keyboard keys based on actual available game height
+  // Keys scale from 46px (small screens) to 58px (tall screens)
+  const keyH     = Math.min(Math.max(Math.round(gameH * 0.085), 46), 58);
+  const keyGap   = keyH >= 54 ? 7 : keyH >= 50 ? 6 : 5;
+  const keyFont  = keyH >= 54 ? 15 : 14;
+  const wideFont = keyH >= 54 ? 13 : 12;
+
+  kbEl.style.gap = keyGap + 'px';
+  kbEl.querySelectorAll('.key-row').forEach(r => r.style.gap = keyGap + 'px');
+  kbEl.querySelectorAll('.key').forEach(k => {
+    k.style.height = keyH + 'px';
+    k.style.fontSize = k.classList.contains('wide') ? wideFont + 'px' : keyFont + 'px';
+  });
+
+  // Now read actual keyboard height and size board from remainder
+  const kbH    = kbEl.offsetHeight;
+  const availH = gameH - kbH - 12;
+  const availW = wrapper.clientWidth;
+
+  const maxBoardW = Math.min(availW, 350);
+  const tileFromH = Math.floor((availH - 5 * GAP) / MAX_GUESSES);
+  const tileFromW = Math.floor((maxBoardW - 4 * GAP) / WORD_LENGTH);
+  const tileSize  = Math.min(tileFromH, tileFromW, 72);
+  const fontSize  = Math.max(Math.floor(tileSize * 0.42), 14);
+
+  const boardW = WORD_LENGTH * tileSize + (WORD_LENGTH - 1) * GAP;
+  const boardH = MAX_GUESSES * tileSize + (MAX_GUESSES - 1) * GAP;
+
+  boardEl.style.width  = boardW + 'px';
+  boardEl.style.height = boardH + 'px';
+
+  boardEl.querySelectorAll('.row').forEach(row => {
+    row.style.height = tileSize + 'px';
+    row.querySelectorAll('.tile').forEach(tile => {
+      tile.style.width    = tileSize + 'px';
+      tile.style.height   = tileSize + 'px';
+      tile.style.fontSize = fontSize + 'px';
+      tile.style.flex     = 'none';
+    });
+  });
+}
+
+window.addEventListener('resize', resizeBoard);
+if (window.visualViewport) {
+  window.visualViewport.addEventListener('resize', resizeBoard);
+}
+
+// Check for midnight rollover every minute — reload if day has changed
+setInterval(() => {
+  if (getLocalDayIndex() !== dayIndex) {
+    window.location.reload(true);
+  }
+}, 60000);
+
+// Fire multiple times — fonts + Android browser chrome settle over several frames
+requestAnimationFrame(() => requestAnimationFrame(resizeBoard));
+setTimeout(resizeBoard, 200);
+setTimeout(resizeBoard, 600);
+// ────────────────────────────────────────────────────────────────────────────
+
+function handleKey(key) {
+  if (gameOver || revealInProgress) return;
+  if (key === '⌫' || key === 'BACKSPACE') {
+    deleteLetter();
+  } else if (key === 'ENTER') {
+    submitGuess();
+  } else if (/^[A-Z]$/.test(key)) {
+    addLetter(key);
+  }
+}
+
+function addLetter(letter) {
+  if (currentCol >= WORD_LENGTH) return;
+  const tile = tiles[currentRow][currentCol];
+  tile.textContent = letter;
+  tile.dataset.letter = letter;
+  tile.classList.add('pop');
+  tile.addEventListener('animationend', () => tile.classList.remove('pop'), { once: true });
+  currentGuess.push(letter);
+  currentCol++;
+}
+
+function deleteLetter() {
+  if (currentCol <= 0) return;
+  currentCol--;
+  currentGuess.pop();
+  const tile = tiles[currentRow][currentCol];
+  tile.textContent = '';
+  delete tile.dataset.letter;
+}
+
+function clearCurrentRow() {
+  for (let c = 0; c < WORD_LENGTH; c++) {
+    const tile = tiles[currentRow][c];
+    tile.textContent = '';
+    delete tile.dataset.letter;
+    tile.classList.remove('shake');
+  }
+  currentGuess = [];
+  currentCol = 0;
+}
+
+function submitGuess() {
+  if (currentCol < WORD_LENGTH) {
+    shakeRow(currentRow);
+    showToast("Not enough letters");
+    setTimeout(() => clearCurrentRow(), 600);
+    return;
+  }
+  const guess = currentGuess.join('');
+  if (!VALID_GUESSES.has(guess)) {
+    shakeRow(currentRow);
+    showToast("Not in word list");
+    setTimeout(() => clearCurrentRow(), 600);
+    return;
+  }
+  revealRow(currentRow, guess);
+}
+
+function revealRow(rowIdx, guess) {
+  revealInProgress = true;
+  const result = evaluateGuess(guess);
+
+  result.forEach((state, i) => {
+    const tile = tiles[rowIdx][i];
+    setTimeout(() => {
+      tile.classList.add('flip');
+      setTimeout(() => {
+        tile.dataset.state = state;
+        updateKeyState(guess[i], state);
+      }, 250);
+      tile.addEventListener('animationend', () => tile.classList.remove('flip'), { once: true });
+    }, i * 300);
+  });
+
+  setTimeout(() => {
+    revealInProgress = false;
+    currentRow++;
+    currentCol = 0;
+    currentGuess = [];
+
+    if (guess === TARGET) {
+      gameOver = true;
+      saveState();
+      setTimeout(() => showEndModal(true), 400);
+    } else if (currentRow >= MAX_GUESSES) {
+      gameOver = true;
+      saveState();
+      setTimeout(() => showEndModal(false), 400);
+    } else {
+      saveState();
+    }
+  }, WORD_LENGTH * 300 + 300);
+}
+
+function evaluateGuess(guess) {
+  const result    = Array(WORD_LENGTH).fill('absent');
+  const targetArr = TARGET.split('');
+  const guessArr  = guess.split('');
+
+  guessArr.forEach((l, i) => {
+    if (l === targetArr[i]) {
+      result[i]    = 'correct';
+      targetArr[i] = null;
+      guessArr[i]  = null;
+    }
+  });
+
+  guessArr.forEach((l, i) => {
+    if (!l) return;
+    const ti = targetArr.indexOf(l);
+    if (ti !== -1) {
+      result[i]    = 'present';
+      targetArr[ti] = null;
+    }
+  });
+
+  return result;
+}
+
+const STATE_PRIORITY = { correct: 3, present: 2, absent: 1 };
+function updateKeyState(letter, state) {
+  const el = keyEl[letter];
+  if (!el) return;
+  const current = el.dataset.state;
+  if (!current || STATE_PRIORITY[state] > STATE_PRIORITY[current]) {
+    el.dataset.state = state;
+  }
+}
+
+function shakeRow(rowIdx) {
+  tiles[rowIdx].forEach(t => {
+    t.classList.add('shake');
+    t.addEventListener('animationend', () => t.classList.remove('shake'), { once: true });
+  });
+}
+
+function showToast(msg) {
+  const t = document.createElement('div');
+  t.className = 'toast';
+  t.textContent = msg;
+  document.getElementById('toast-container').appendChild(t);
+  setTimeout(() => t.remove(), 1900);
+}
+
+function closeIntro() {
+  localStorage.setItem(INTRO_KEY, 'true');
+  document.getElementById('intro-modal').style.display = 'none';
+  requestAnimationFrame(resizeBoard);
+}
+
+// PLACEHOLDER — Jenna's success messages go here.
+// Index 0 = solved in 1 guess, index 5 = solved on the last guess.
+const WIN_MESSAGES = [
+  "Genius! Nadine is unstoppable! 🏆",
+  "Nadine is on FIRE! 🔥",
+  "Magnificent, Nadine! 🎉",
+  "Impressive, Nadine! ✨",
+  "Great job, Nadine! 👏",
+  "Phew! Got there, Nadine 😅"
+];
+
+function showEndModal(won) {
+  const modal = document.getElementById('end-modal');
+  document.getElementById('end-answer').textContent = TARGET;
+  document.getElementById('end-meaning').textContent = MEANING;
+
+  if (won) {
+    document.getElementById('end-title').textContent = WIN_MESSAGES[Math.min(currentRow - 1, 5)];
+  } else {
+    document.getElementById('end-title').textContent = "Nice try, Nadine! 💪";
+  }
+  modal.style.display = 'flex';
+}
+
+function closeEndModal() {
+  document.getElementById('end-modal').style.display = 'none';
+}
+
+document.addEventListener('keydown', e => {
+  if (e.ctrlKey || e.altKey || e.metaKey) return;
+  const k = e.key.toUpperCase();
+  if (k === 'BACKSPACE') handleKey('⌫');
+  else if (k === 'ENTER') handleKey('ENTER');
+  else if (/^[A-Z]$/.test(k)) handleKey(k);
+});
+</script>
+</body>
+</html>
